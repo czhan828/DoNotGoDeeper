@@ -16,11 +16,20 @@ public class PlayerMovement : MonoBehaviour
     public float crouchHeight = 1f;
     public float crouchSpeed = 3f;
 
+    [Header("Footstep Sounds")]
+    public AudioSource footstepAudioSource;
+    public AudioClip footstepSound;
+    public float walkStepInterval = 0.5f;   // time between footstep sounds while walking
+    public float crouchStepInterval = 0.7f; // time between footstep sounds while sneaking
+    public float walkVolume = 1f;
+    public float crouchVolume = 0.2f;       // quiet while sneaking
+
+    private float footstepTimer = 0f;
     private Vector3 moveDirection = Vector3.zero;
     private float rotationX = 0;
     private CharacterController characterController;
-
     private bool canMove = true;
+    private bool isCrouching = false;
 
     void Start()
     {
@@ -33,8 +42,8 @@ public class PlayerMovement : MonoBehaviour
     {
         Vector3 forward = transform.TransformDirection(Vector3.forward);
         Vector3 right = transform.TransformDirection(Vector3.right);
-
         bool isRunning = Input.GetKey(KeyCode.LeftShift);
+
         float curSpeedX = canMove ? (isRunning ? runSpeed : walkSpeed) * Input.GetAxis("Vertical") : 0;
         float curSpeedY = canMove ? (isRunning ? runSpeed : walkSpeed) * Input.GetAxis("Horizontal") : 0;
         float movementDirectionY = moveDirection.y;
@@ -54,21 +63,26 @@ public class PlayerMovement : MonoBehaviour
             moveDirection.y -= gravity * Time.deltaTime;
         }
 
+        // Crouch / sneak with R key
         if (Input.GetKey(KeyCode.R) && canMove)
         {
             characterController.height = crouchHeight;
             walkSpeed = crouchSpeed;
             runSpeed = crouchSpeed;
-
+            isCrouching = true;
         }
         else
         {
             characterController.height = defaultHeight;
             walkSpeed = 6f;
             runSpeed = 12f;
+            isCrouching = false;
         }
 
         characterController.Move(moveDirection * Time.deltaTime);
+
+        // Handle footstep sounds
+        HandleFootsteps(curSpeedX, curSpeedY);
 
         if (canMove)
         {
@@ -78,5 +92,36 @@ public class PlayerMovement : MonoBehaviour
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
         }
     }
-}
 
+    void HandleFootsteps(float speedX, float speedY)
+    {
+        bool isMoving = Mathf.Abs(speedX) > 0.1f || Mathf.Abs(speedY) > 0.1f;
+        bool isGrounded = characterController.isGrounded;
+
+        if (isMoving && isGrounded)
+        {
+            footstepTimer -= Time.deltaTime;
+
+            if (footstepTimer <= 0f)
+            {
+                if (footstepAudioSource != null && footstepSound != null)
+                {
+                    footstepAudioSource.Stop();
+                    footstepAudioSource.volume = isCrouching ? crouchVolume : walkVolume;
+                    footstepAudioSource.clip = footstepSound;
+                    footstepAudioSource.Play();
+                }
+                footstepTimer = isCrouching ? crouchStepInterval : walkStepInterval;
+            }
+        }
+        else
+        {
+            // Player stopped or in air — stop sound immediately
+            if (footstepAudioSource != null && footstepAudioSource.isPlaying)
+            {
+                footstepAudioSource.Stop();
+            }
+            footstepTimer = 0f;
+        }
+    }
+}

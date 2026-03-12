@@ -14,6 +14,10 @@ public class PickUpScript : MonoBehaviour
     private bool canDrop = true;
     private int LayerNumber;
 
+    [Header("Drop Sound")]
+    public AudioSource audioSource;
+    public AudioClip dropSound;
+
     void Start()
     {
         LayerNumber = LayerMask.NameToLayer("holdLayer");
@@ -56,6 +60,7 @@ public class PickUpScript : MonoBehaviour
                 {
                     StopClipping();
                     DropObject();
+                    PlayDropSound();
                 }
             }
         }
@@ -68,6 +73,7 @@ public class PickUpScript : MonoBehaviour
             {
                 StopClipping();
                 ThrowObject();
+                PlayDropSound();
             }
         }
     }
@@ -137,6 +143,14 @@ public class PickUpScript : MonoBehaviour
         if (hits.Length > 1)
         {
             heldObj.transform.position = transform.position + new Vector3(0f, -0.5f, 0f);
+        }
+    }
+
+    void PlayDropSound()
+    {
+        if (audioSource != null && dropSound != null)
+        {
+            audioSource.PlayOneShot(dropSound);
         }
     }
 }
