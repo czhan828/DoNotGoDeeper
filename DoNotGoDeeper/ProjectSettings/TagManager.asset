@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - canPickUp
+  - CinemachineTarget
   layers:
   - Default
   - TransparentFX
@@ -13,9 +14,9 @@ TagManager:
   - Water
   - UI
   - 
-  - 
+  - Player
   - holdLayer
-  - 
+  - Ground
   - 
   - 
   - 

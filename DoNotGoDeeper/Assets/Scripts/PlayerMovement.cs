@@ -17,6 +17,7 @@ public class PlayerMovement : MonoBehaviour
     public float crouchHeight = 1f;
     public float crouchSpeed = 3f;
 
+
     [Header("Footstep Sounds")]
     public AudioSource footstepAudioSource;
     public AudioClip footstepSound;
@@ -25,13 +26,16 @@ public class PlayerMovement : MonoBehaviour
     public float walkVolume = 1f;
     public float crouchVolume = 0.2f;       // quiet while sneaking
 
+    [SerializeField] float crouchSoundIntensity = 0.1f;
+    [SerializeField] float walkSoundIntensity   = 0.3f;
+    [SerializeField] float runSoundIntensity    = 0.6f;
     private float footstepTimer = 0f;
     private Vector3 moveDirection = Vector3.zero;
     private float rotationX = 0;
     private CharacterController characterController;
     private bool canMove = true;
     private bool isCrouching = false;
-
+    private bool isRunning = false;
     void Start()
     {
         characterController = GetComponent<CharacterController>();
@@ -43,8 +47,8 @@ public class PlayerMovement : MonoBehaviour
     {
         Vector3 forward = transform.TransformDirection(Vector3.forward);
         Vector3 right = transform.TransformDirection(Vector3.right);
-        bool isRunning = Input.GetKey(KeyCode.LeftShift);
-
+        isRunning = Input.GetKey(KeyCode.LeftShift);
+        
         float curSpeedX = canMove ? (isRunning ? runSpeed : walkSpeed) * Input.GetAxis("Vertical") : 0;
         float curSpeedY = canMove ? (isRunning ? runSpeed : walkSpeed) * Input.GetAxis("Horizontal") : 0;
         float movementDirectionY = moveDirection.y;
@@ -111,6 +115,8 @@ public class PlayerMovement : MonoBehaviour
                     footstepAudioSource.volume = isCrouching ? crouchVolume : walkVolume;
                     footstepAudioSource.clip = footstepSound;
                     footstepAudioSource.Play();
+                    float intensity = isCrouching ? crouchSoundIntensity : isRunning ? runSoundIntensity : walkSoundIntensity;
+SoundEventManager.EmitSound(transform.position, intensity);
                 }
                 footstepTimer = isCrouching ? crouchStepInterval : walkStepInterval;
             }

@@ -8,7 +8,6 @@ public class PickUpScript : MonoBehaviour
     public Transform holdPos;
     public float throwForce = 500f;
     public float pickUpRange = 5f;
-    private float rotationSensitivity = 1f;
     private GameObject heldObj;
     private Rigidbody heldObjRb;
     private bool canDrop = true;
@@ -68,7 +67,6 @@ public class PickUpScript : MonoBehaviour
         if (heldObj != null)
         {
             MoveObject();
-            RotateObject();
             if (Input.GetKeyDown(KeyCode.Mouse0) && canDrop == true)
             {
                 StopClipping();
@@ -102,6 +100,7 @@ public class PickUpScript : MonoBehaviour
         heldObjRb.isKinematic = false;
         heldObj.transform.parent = null;
         heldObj = null;
+        canDrop = true;
     }
 
     void MoveObject()
@@ -109,21 +108,6 @@ public class PickUpScript : MonoBehaviour
         heldObj.transform.position = holdPos.transform.position;
     }
 
-    void RotateObject()
-    {
-        if (Input.GetKey(KeyCode.R))
-        {
-            canDrop = false;
-            float XaxisRotation = Input.GetAxis("Mouse X") * rotationSensitivity;
-            float YaxisRotation = Input.GetAxis("Mouse Y") * rotationSensitivity;
-            heldObj.transform.Rotate(Vector3.down, XaxisRotation);
-            heldObj.transform.Rotate(Vector3.right, YaxisRotation);
-        }
-        else
-        {
-            canDrop = true;
-        }
-    }
 
     void ThrowObject()
     {
@@ -132,6 +116,7 @@ public class PickUpScript : MonoBehaviour
         heldObjRb.isKinematic = false;
         heldObj.transform.parent = null;
         heldObjRb.AddForce(transform.forward * throwForce);
+        SoundEventManager.EmitSound(transform.position, 0.9f);
         heldObj = null;
     }
 
@@ -152,5 +137,7 @@ public class PickUpScript : MonoBehaviour
         {
             audioSource.PlayOneShot(dropSound);
         }
+        SoundEventManager.EmitSound(transform.position, 0.8f);
+
     }
 }
