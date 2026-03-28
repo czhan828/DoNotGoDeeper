@@ -11785,6 +11785,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1373098863}
+  - component: {fileID: 1373098864}
   m_Layer: 0
   m_Name: Walls
   m_TagString: Untagged
@@ -11876,6 +11877,29 @@ Transform:
   - {fileID: 1000668637}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &1373098864
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1373098862}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Height: 1
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &1376328619
 GameObject:
   m_ObjectHideFlags: 0
@@ -15129,7 +15153,7 @@ GameObject:
   - component: {fileID: 1781641539}
   - component: {fileID: 1781641538}
   m_Layer: 0
-  m_Name: Proctor (1)
+  m_Name: Proctor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -15192,13 +15216,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3b8b3a61f1e1824fbcc4bd954f06741, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAI
-  patrolRange: 15
-  navSampleRadius: 5
-  patrolArrivalThreshold: 1.2
+  patrolRange: 100
+  navSampleRadius: 10
+  patrolArrivalThreshold: 8
   investigateDuration: 5
   hearingThreshold: 0.1
-  patrolSpeed: 2
-  investigateSpeed: 3.5
+  patrolSpeed: 10
+  investigateSpeed: 5
+  player: {fileID: 1677539944}
+  catchRadius: 3
 --- !u!195 &1781641541
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -15209,7 +15235,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 15
+  m_Speed: 40
   m_Acceleration: 8
   avoidancePriority: 50
   m_AngularSpeed: 120

@@ -115,8 +115,7 @@ public class PlayerMovement : MonoBehaviour
                     footstepAudioSource.volume = isCrouching ? crouchVolume : walkVolume;
                     footstepAudioSource.clip = footstepSound;
                     footstepAudioSource.Play();
-                    float intensity = isCrouching ? crouchSoundIntensity : isRunning ? runSoundIntensity : walkSoundIntensity;
-SoundEventManager.EmitSound(transform.position, intensity);
+                    float intensity = isCrouching ? crouchSoundIntensity : isRunning ? runSoundIntensity : walkSoundIntensity; SoundEventManager.EmitSound(transform.position, intensity);
                 }
                 footstepTimer = isCrouching ? crouchStepInterval : walkStepInterval;
             }
