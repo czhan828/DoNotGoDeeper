@@ -14336,8 +14336,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
   playerCamera: {fileID: 330585545}
   cameraPivot: {fileID: 2018967050}
-  walkSpeed: 25
-  runSpeed: 20
+  walkSpeed: 60
+  runSpeed: 75
   jumpPower: 7
   gravity: 10
   lookSpeed: 3
