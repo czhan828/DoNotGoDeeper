@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -27,6 +28,13 @@ using UnityEngine;
 public static class SoundEventManager
 {
     private static readonly List<IHearSound> _listeners = new List<IHearSound>();
+
+    /// <summary>
+    /// Subscribe to this event to react to any sound emitted in the scene.
+    /// Used by FlickerLight for sound-reactive flickering.
+    /// Signature: (Vector3 position, float intensity)
+    /// </summary>
+    public static event Action<Vector3, float> OnSoundEmitted;
 
     // FIX: clear the static list at the start of every Play session
     // so stale references from the previous session don't cause NullReferenceExceptions
@@ -61,6 +69,8 @@ public static class SoundEventManager
     public static void EmitSound(Vector3 position, float intensity)
     {
         Debug.Log($"[SoundEventManager] EmitSound pos={position} intensity={intensity:F2} listeners={_listeners.Count}");
+
+        OnSoundEmitted?.Invoke(position, intensity);
 
         for (int i = _listeners.Count - 1; i >= 0; i--)
         {

@@ -14,28 +14,28 @@ using UnityEngine.AI;
 ///
 /// PATROL:
 ///   Picks a valid random NavMesh point within patrolRange.
-///   Walks there. When arrived, picks a new point. Loops forever.
+///   Walks there at a slightly randomised speed (±15%) so movement feels alive.
+///   When arrived, picks a new point. Loops forever.
 ///
 /// INVESTIGATE:
-///   Walks to the sound position.
-///   Waits investigateDuration seconds (default 7).
+///   Walks to the sound position at investigateSpeed.
+///   Waits investigateDuration seconds.
 ///   Returns to PATROL from current spot.
-///   If another sound fires during investigation, updates destination
-///   to the new sound position.
+///   If another sound fires during investigation, updates destination.
 ///
 /// ─── SOUND DETECTION ─────────────────────────────────────────────────────────
+///   perceivedIntensity = rawIntensity / distance
+///   if perceivedIntensity >= hearingThreshold → switch to INVESTIGATE
 ///
-///   Implements IHearSound — registered with SoundEventManager.
-///   When OnSoundHeard() fires:
-///     perceivedIntensity = rawIntensity / distanceToSound
-///     if perceivedIntensity >= hearingThreshold → switch to INVESTIGATE
+/// ─── PROXIMITY SENSING ───────────────────────────────────────────────────────
+///   If the player is within sensingRadius AND no wall is between them,
+///   the Proctor "feels" the presence and investigates their position.
+///   This is not sound-based — it creates paranoia at very close range.
 ///
-/// ─── FIXES APPLIED ───────────────────────────────────────────────────────────
-///   ✔ hearingThreshold lowered to 0.05 (was 0.3 — effectively deaf)
-///   ✔ Per-frame Debug.Log in PatrolState removed (was spamming console)
-///   ✔ Missing </summary> closing tag on PatrolState fixed
-///   ✔ patrolArrivalThreshold raised to 1.5 for more reliable arrival detection
-///   ✔ Added fallback: if path becomes invalid, clear dest and repick
+/// ─── VOCALIZATIONS ───────────────────────────────────────────────────────────
+///   The Proctor emits random audio clips while patrolling and investigating.
+///   Patrol clips: shuffling, slow breathing (diegetic — player can locate him).
+///   Investigate clips: heavier breathing, urgent sounds.
 /// </summary>
 [RequireComponent(typeof(NavMeshAgent))]
 public class EnemyAI : MonoBehaviour, IHearSound
@@ -62,9 +62,8 @@ public class EnemyAI : MonoBehaviour, IHearSound
         "perceivedIntensity = rawIntensity / distance.\n" +
         "Lower = more sensitive.\n\n" +
         "At 0.05: walks heard ~6 units away, runs ~12 units away.\n" +
-        "At 0.10: walks heard ~3 units away, runs ~6 units away.\n" +
-        "Recommended: 0.05 for easy detection, 0.10 for tighter range.")]
-    [SerializeField] float hearingThreshold = 0.05f;   // FIX: was 0.3 — almost completely deaf
+        "At 0.10: walks heard ~3 units away, runs ~6 units away.")]
+    [SerializeField] float hearingThreshold = 0.05f;
 
     [Header("Speed")]
     [SerializeField] float patrolSpeed = 10f;
@@ -77,9 +76,30 @@ public class EnemyAI : MonoBehaviour, IHearSound
     [Tooltip("How close the player must be (in metres) for the enemy to catch them.")]
     [SerializeField] float catchRadius = 2f;
 
+    [Header("Proximity Sensing")]
+    [Tooltip("If the player is within this radius with no wall between them, the Proctor senses them.")]
+    [SerializeField] float sensingRadius = 3.5f;
+
+    [Tooltip("Layer mask for walls — used in the line-of-sight check for sensing.")]
+    [SerializeField] LayerMask wallLayers;
+
+    [Header("Vocalizations")]
+    [Tooltip("Sounds the Proctor makes while patrolling (shuffling, slow breathing, muttering).")]
+    [SerializeField] AudioClip[] patrolVocalizations;
+
+    [Tooltip("Sounds the Proctor makes while investigating (heavier breathing, urgent sounds).")]
+    [SerializeField] AudioClip[] investigateVocalizations;
+
+    [Tooltip("Minimum seconds between vocalizations.")]
+    [SerializeField] float minVocalizationInterval = 8f;
+
+    [Tooltip("Maximum seconds between vocalizations.")]
+    [SerializeField] float maxVocalizationInterval = 20f;
+
     // ─── Private state ────────────────────────────────────────────────────────
 
     private NavMeshAgent _agent;
+    private AudioSource  _audioSource;
 
     private enum AIState { Patrol, Investigate }
     private AIState _state = AIState.Patrol;
@@ -93,12 +113,20 @@ public class EnemyAI : MonoBehaviour, IHearSound
     private float   _investigateTimer;
     private bool    _arrivedAtSound;
 
+    // Vocalizations
+    private float _vocalizationTimer;
+
     // ─── Unity lifecycle ──────────────────────────────────────────────────────
 
     void Start()
     {
-        _agent = GetComponent<NavMeshAgent>();
+        _agent       = GetComponent<NavMeshAgent>();
+        _audioSource = GetComponent<AudioSource>();
+        if (_audioSource == null)
+            _audioSource = gameObject.AddComponent<AudioSource>();
+
         SoundEventManager.Register(this);
+        ResetVocalizationTimer();
     }
 
     void OnDestroy()
@@ -108,6 +136,9 @@ public class EnemyAI : MonoBehaviour, IHearSound
 
     void Update()
     {
+        CheckProximitySense();
+        TickVocalizations();
+
         switch (_state)
         {
             case AIState.Patrol:      PatrolState();      break;
@@ -118,20 +149,11 @@ public class EnemyAI : MonoBehaviour, IHearSound
     // ─── State: Patrol ────────────────────────────────────────────────────────
 
     /// <summary>
-    /// PATROL STATE — called every frame while _state == Patrol.
-    ///
-    /// Flow:
-    ///   1. If no destination is set, call FindPatrolPoint() to pick one.
-    ///   2. Once a valid destination exists, give it to the NavMeshAgent.
-    ///   3. When the agent is close enough, clear the destination so a new
-    ///      one is picked next frame. This creates a continuous wander loop.
-    ///   4. If the path becomes invalid (e.g. agent clipped through geometry),
-    ///      reset and repick to avoid getting stuck forever.
+    /// PATROL STATE — continuous wander loop with slight speed variation
+    /// so the Proctor never feels mechanical.
     /// </summary>
     void PatrolState()
     {
-        _agent.speed = patrolSpeed;
-
         if (!_patrolDestSet)
             FindPatrolPoint();
 
@@ -139,34 +161,23 @@ public class EnemyAI : MonoBehaviour, IHearSound
         {
             _agent.SetDestination(_patrolDest);
 
-            // FIX: guard against invalid/incomplete paths causing infinite stuck loops
             if (!_agent.pathPending)
             {
-                if (_agent.pathStatus == UnityEngine.AI.NavMeshPathStatus.PathInvalid)
+                if (_agent.pathStatus == NavMeshPathStatus.PathInvalid)
                 {
-                    // Path couldn't be resolved — pick a new point
                     _patrolDestSet = false;
                     return;
                 }
 
                 if (_agent.remainingDistance < patrolArrivalThreshold)
-                {
-                    // Arrived — queue up a new destination next frame
                     _patrolDestSet = false;
-                }
             }
         }
     }
 
     /// <summary>
-    /// Picks a valid random NavMesh point within patrolRange of current position.
-    ///
-    /// Flow:
-    ///   1. Generate a random offset within patrolRange.
-    ///   2. Use NavMesh.SamplePosition() to snap it to the nearest NavMesh surface
-    ///      within navSampleRadius.
-    ///   3. Only set _patrolDestSet = true if SamplePosition finds a valid hit.
-    ///      If it doesn't, we try again next frame — no freeze, just retry.
+    /// Picks a valid random NavMesh point and applies a subtle speed variation
+    /// so each patrol leg feels slightly different.
     /// </summary>
     void FindPatrolPoint()
     {
@@ -182,6 +193,11 @@ public class EnemyAI : MonoBehaviour, IHearSound
         {
             _patrolDest    = hit.position;
             _patrolDestSet = true;
+
+            // Speed variation: ±15% each leg so movement feels alive, not robotic
+            float variance = Random.Range(-patrolSpeed * 0.15f, patrolSpeed * 0.15f);
+            _agent.speed   = patrolSpeed + variance;
+
             Debug.Log("[EnemyAI] New patrol destination: " + _patrolDest);
         }
     }
@@ -189,16 +205,13 @@ public class EnemyAI : MonoBehaviour, IHearSound
     // ─── State: Investigate ───────────────────────────────────────────────────
 
     /// <summary>
-    /// INVESTIGATE STATE — called every frame while _state == Investigate.
-    ///
-    /// Flow:
-    ///   1. Check catch radius — if player is within catchRadius, trigger caught.
-    ///   2. Move toward _soundOrigin at investigate speed.
-    ///   3. Once arrived, start counting down investigateTimer.
-    ///   4. When timer expires → return to Patrol from current position.
+    /// INVESTIGATE STATE — moves to sound origin, waits, then returns to patrol.
+    /// Catch check runs every frame here.
     /// </summary>
     void InvestigateState()
     {
+        _agent.speed = investigateSpeed;
+
         // Catch check
         if (player != null)
         {
@@ -209,8 +222,6 @@ public class EnemyAI : MonoBehaviour, IHearSound
                 return;
             }
         }
-
-        _agent.speed = investigateSpeed;
 
         if (!_arrivedAtSound)
         {
@@ -227,7 +238,6 @@ public class EnemyAI : MonoBehaviour, IHearSound
         else
         {
             _investigateTimer -= Time.deltaTime;
-            Debug.Log("[EnemyAI] Investigating... " + _investigateTimer.ToString("F1") + "s left");
 
             if (_investigateTimer <= 0f)
             {
@@ -237,9 +247,6 @@ public class EnemyAI : MonoBehaviour, IHearSound
         }
     }
 
-    /// <summary>
-    /// Resets all investigation state and switches back to Patrol.
-    /// </summary>
     void ReturnToPatrol()
     {
         _arrivedAtSound = false;
@@ -247,33 +254,88 @@ public class EnemyAI : MonoBehaviour, IHearSound
         _state          = AIState.Patrol;
     }
 
+    // ─── Proximity Sensing ────────────────────────────────────────────────────
+
     /// <summary>
-    /// Called when player enters catchRadius during investigation.
+    /// If the player is within sensingRadius AND there is no wall between them,
+    /// the Proctor "feels" their presence and investigates their exact position.
+    /// This is not sound-based — it punishes players who stand too close.
+    /// </summary>
+    void CheckProximitySense()
+    {
+        if (player == null) return;
+
+        float dist = Vector3.Distance(transform.position, player.position);
+        if (dist > sensingRadius) return;
+
+        Vector3 dir = (player.position - transform.position).normalized;
+
+        // Only sense if no wall blocks line of sight
+        if (!Physics.Raycast(transform.position, dir, dist, wallLayers))
+        {
+            if (_state != AIState.Investigate || Vector3.Distance(_soundOrigin, player.position) > 1f)
+            {
+                _soundOrigin    = player.position;
+                _arrivedAtSound = false;
+                _state          = AIState.Investigate;
+                Debug.Log("[EnemyAI] Proximity sense triggered — investigating player position.");
+            }
+        }
+    }
+
+    // ─── Vocalizations ───────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Plays a random vocalization clip from the current state's array
+    /// on a randomised interval. These are diegetic — the player can
+    /// use them to locate the Proctor by ear.
+    /// </summary>
+    void TickVocalizations()
+    {
+        _vocalizationTimer -= Time.deltaTime;
+        if (_vocalizationTimer > 0f) return;
+
+        AudioClip[] clips = (_state == AIState.Investigate)
+            ? investigateVocalizations
+            : patrolVocalizations;
+
+        if (clips != null && clips.Length > 0)
+        {
+            AudioClip clip = clips[Random.Range(0, clips.Length)];
+            if (clip != null) _audioSource.PlayOneShot(clip);
+        }
+
+        ResetVocalizationTimer();
+    }
+
+    void ResetVocalizationTimer()
+    {
+        _vocalizationTimer = Random.Range(minVocalizationInterval, maxVocalizationInterval);
+    }
+
+    // ─── Catch ────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Called when the player enters catchRadius. Stops the agent and
+    /// hands off to GameManager to handle the catch sequence (freeze,
+    /// jumpscare, fade, game-over UI).
     /// </summary>
     void TriggerCaught()
     {
         Debug.Log("[EnemyAI] Player caught!");
+        _agent.isStopped = true;
         _agent.ResetPath();
 
-        // TODO: hook up game over logic here:
-        // GameManager.Instance.OnPlayerCaught();
-        // SceneManager.LoadScene("GameOver");
-
-        ReturnToPatrol();
+        if (GameManager.instance != null)
+            GameManager.instance.OnPlayerCaught();
     }
 
     // ─── IHearSound implementation ────────────────────────────────────────────
 
     /// <summary>
     /// Called by SoundEventManager whenever any sound is emitted in the scene.
-    ///
     /// perceivedIntensity = rawIntensity / distance
     /// If perceivedIntensity >= hearingThreshold, switch to Investigate.
-    ///
-    /// Detection ranges at hearingThreshold = 0.05:
-    ///   Crouch (0.1 intensity) → heard within ~2 units
-    ///   Walk   (0.3 intensity) → heard within ~6 units
-    ///   Run    (0.6 intensity) → heard within ~12 units
     /// </summary>
     public void OnSoundHeard(Vector3 soundPosition, float rawIntensity)
     {
@@ -298,15 +360,15 @@ public class EnemyAI : MonoBehaviour, IHearSound
 
     void OnDrawGizmosSelected()
     {
-        // Catch radius
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, catchRadius);
 
-        // Patrol range
+        Gizmos.color = new Color(1f, 0.5f, 0f);
+        Gizmos.DrawWireSphere(transform.position, sensingRadius);
+
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(transform.position, patrolRange);
 
-        // Current patrol destination
         if (_patrolDestSet)
         {
             Gizmos.color = Color.green;
@@ -314,7 +376,6 @@ public class EnemyAI : MonoBehaviour, IHearSound
             Gizmos.DrawLine(transform.position, _patrolDest);
         }
 
-        // Investigation target
         if (_state == AIState.Investigate)
         {
             Gizmos.color = Color.yellow;
