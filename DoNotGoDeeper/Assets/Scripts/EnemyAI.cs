@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// EnemyAI — Handles two states: Patrol and Investigate.
@@ -92,6 +93,7 @@ public class EnemyAI : MonoBehaviour, IHearSound
     private Vector3 _soundOrigin;
     private float   _investigateTimer;
     private bool    _arrivedAtSound;
+    private bool    _playerCaught;
 
     // ─── Unity lifecycle ──────────────────────────────────────────────────────
 
@@ -131,7 +133,9 @@ public class EnemyAI : MonoBehaviour, IHearSound
     void PatrolState()
     {
         _agent.speed = patrolSpeed;
+        if (_playerCaught) return;  // Don't move if player is already caught
 
+        AttemptCatchPlayer();
         if (!_patrolDestSet)
             FindPatrolPoint();
 
@@ -157,6 +161,25 @@ public class EnemyAI : MonoBehaviour, IHearSound
             }
         }
     }
+
+    /// <summary>
+    /// check if Player is within killing radius of the Proctor
+    /// </summary>
+    void AttemptCatchPlayer()
+    {
+        if (player != null)
+    {
+        float distToPlayer = Vector3.Distance(transform.position, player.position);
+        if (distToPlayer <= catchRadius)
+        {
+            TriggerCaught();
+            return;
+        }
+    }
+        
+    }
+
+
 
     /// <summary>
     /// Picks a valid random NavMesh point within patrolRange of current position.
@@ -199,16 +222,8 @@ public class EnemyAI : MonoBehaviour, IHearSound
     /// </summary>
     void InvestigateState()
     {
-        // Catch check
-        if (player != null)
-        {
-            float distToPlayer = Vector3.Distance(transform.position, player.position);
-            if (distToPlayer <= catchRadius)
-            {
-                TriggerCaught();
-                return;
-            }
-        }
+        AttemptCatchPlayer();
+        if (_playerCaught) return;
 
         _agent.speed = investigateSpeed;
 
@@ -253,13 +268,11 @@ public class EnemyAI : MonoBehaviour, IHearSound
     void TriggerCaught()
     {
         Debug.Log("[EnemyAI] Player caught!");
+        _playerCaught = true;
         _agent.ResetPath();
+        SceneManager.LoadSceneAsync(3);
 
-        // TODO: hook up game over logic here:
-        // GameManager.Instance.OnPlayerCaught();
-        // SceneManager.LoadScene("GameOver");
-
-        ReturnToPatrol();
+        // ReturnToPatrol(); only reactivate if we have health bar
     }
 
     // ─── IHearSound implementation ────────────────────────────────────────────
@@ -288,10 +301,13 @@ public class EnemyAI : MonoBehaviour, IHearSound
             _arrivedAtSound = false;
             _state          = AIState.Investigate;
 
-            Debug.Log($"[EnemyAI] Sound heard! pos={soundPosition} " +
+            Debug.Log($"Proctor heard a noise at pos={soundPosition} " +
                       $"raw={rawIntensity:F2} dist={distance:F1} " +
                       $"perceived={perceivedIntensity:F3} (threshold={hearingThreshold})");
         }
+        InvestigateState();  // Immediately react to sound without waiting for next frame
+        // might be iffy or buggy but test for now
+        // might need to adjust priority sounds
     }
 
     // ─── Editor visualization ─────────────────────────────────────────────────
