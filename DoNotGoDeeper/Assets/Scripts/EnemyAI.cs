@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// EnemyAI — Handles two states: Patrol and Investigate.
@@ -112,6 +113,7 @@ public class EnemyAI : MonoBehaviour, IHearSound
     private Vector3 _soundOrigin;
     private float   _investigateTimer;
     private bool    _arrivedAtSound;
+    private bool    _playerCaught;
 
     // Vocalizations
     private float _vocalizationTimer;
@@ -154,6 +156,10 @@ public class EnemyAI : MonoBehaviour, IHearSound
     /// </summary>
     void PatrolState()
     {
+        if (_playerCaught) return;
+
+        AttemptCatchPlayer();
+
         if (!_patrolDestSet)
             FindPatrolPoint();
 
@@ -173,6 +179,19 @@ public class EnemyAI : MonoBehaviour, IHearSound
                     _patrolDestSet = false;
             }
         }
+    }
+
+    /// <summary>
+    /// Checks if the player is within catchRadius. If so, triggers the catch sequence.
+    /// Called every frame from both PatrolState and InvestigateState.
+    /// </summary>
+    void AttemptCatchPlayer()
+    {
+        if (player == null) return;
+
+        float distToPlayer = Vector3.Distance(transform.position, player.position);
+        if (distToPlayer <= catchRadius)
+            TriggerCaught();
     }
 
     /// <summary>
@@ -212,16 +231,8 @@ public class EnemyAI : MonoBehaviour, IHearSound
     {
         _agent.speed = investigateSpeed;
 
-        // Catch check
-        if (player != null)
-        {
-            float distToPlayer = Vector3.Distance(transform.position, player.position);
-            if (distToPlayer <= catchRadius)
-            {
-                TriggerCaught();
-                return;
-            }
-        }
+        AttemptCatchPlayer();
+        if (_playerCaught) return;
 
         if (!_arrivedAtSound)
         {
@@ -263,7 +274,7 @@ public class EnemyAI : MonoBehaviour, IHearSound
     /// </summary>
     void CheckProximitySense()
     {
-        if (player == null) return;
+        if (player == null || _playerCaught) return;
 
         float dist = Vector3.Distance(transform.position, player.position);
         if (dist > sensingRadius) return;
@@ -316,18 +327,18 @@ public class EnemyAI : MonoBehaviour, IHearSound
     // ─── Catch ────────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Called when the player enters catchRadius. Stops the agent and
-    /// hands off to GameManager to handle the catch sequence (freeze,
-    /// jumpscare, fade, game-over UI).
+    /// Called when the player enters catchRadius.
+    /// Flags the catch, stops the agent, and loads the game over scene.
     /// </summary>
     void TriggerCaught()
     {
+        if (_playerCaught) return; // prevent double-triggering
+
         Debug.Log("[EnemyAI] Player caught!");
+        _playerCaught    = true;
         _agent.isStopped = true;
         _agent.ResetPath();
-
-        if (GameManager.instance != null)
-            GameManager.instance.OnPlayerCaught();
+        SceneManager.LoadSceneAsync(3);
     }
 
     // ─── IHearSound implementation ────────────────────────────────────────────
@@ -350,7 +361,7 @@ public class EnemyAI : MonoBehaviour, IHearSound
             _arrivedAtSound = false;
             _state          = AIState.Investigate;
 
-            Debug.Log($"[EnemyAI] Sound heard! pos={soundPosition} " +
+            Debug.Log($"Proctor heard a noise at pos={soundPosition} " +
                       $"raw={rawIntensity:F2} dist={distance:F1} " +
                       $"perceived={perceivedIntensity:F3} (threshold={hearingThreshold})");
         }
