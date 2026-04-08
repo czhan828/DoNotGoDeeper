@@ -128,6 +128,7 @@ public class EnemyAI : MonoBehaviour, IHearSound
             _audioSource = gameObject.AddComponent<AudioSource>();
 
         SoundEventManager.Register(this);
+        _state = AIState.Patrol;
         ResetVocalizationTimer();
     }
 
@@ -150,10 +151,6 @@ public class EnemyAI : MonoBehaviour, IHearSound
 
     // ─── State: Patrol ────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// PATROL STATE — continuous wander loop with slight speed variation
-    /// so the Proctor never feels mechanical.
-    /// </summary>
     void PatrolState()
     {
         if (_playerCaught) return;
@@ -181,10 +178,6 @@ public class EnemyAI : MonoBehaviour, IHearSound
         }
     }
 
-    /// <summary>
-    /// Checks if the player is within catchRadius. If so, triggers the catch sequence.
-    /// Called every frame from both PatrolState and InvestigateState.
-    /// </summary>
     void AttemptCatchPlayer()
     {
         if (player == null) return;
@@ -194,10 +187,6 @@ public class EnemyAI : MonoBehaviour, IHearSound
             TriggerCaught();
     }
 
-    /// <summary>
-    /// Picks a valid random NavMesh point and applies a subtle speed variation
-    /// so each patrol leg feels slightly different.
-    /// </summary>
     void FindPatrolPoint()
     {
         Vector3 randomOffset = new Vector3(
@@ -213,7 +202,6 @@ public class EnemyAI : MonoBehaviour, IHearSound
             _patrolDest    = hit.position;
             _patrolDestSet = true;
 
-            // Speed variation: ±15% each leg so movement feels alive, not robotic
             float variance = Random.Range(-patrolSpeed * 0.15f, patrolSpeed * 0.15f);
             _agent.speed   = patrolSpeed + variance;
 
@@ -223,10 +211,6 @@ public class EnemyAI : MonoBehaviour, IHearSound
 
     // ─── State: Investigate ───────────────────────────────────────────────────
 
-    /// <summary>
-    /// INVESTIGATE STATE — moves to sound origin, waits, then returns to patrol.
-    /// Catch check runs every frame here.
-    /// </summary>
     void InvestigateState()
     {
         _agent.speed = investigateSpeed;
@@ -267,11 +251,6 @@ public class EnemyAI : MonoBehaviour, IHearSound
 
     // ─── Proximity Sensing ────────────────────────────────────────────────────
 
-    /// <summary>
-    /// If the player is within sensingRadius AND there is no wall between them,
-    /// the Proctor "feels" their presence and investigates their exact position.
-    /// This is not sound-based — it punishes players who stand too close.
-    /// </summary>
     void CheckProximitySense()
     {
         if (player == null || _playerCaught) return;
@@ -281,7 +260,6 @@ public class EnemyAI : MonoBehaviour, IHearSound
 
         Vector3 dir = (player.position - transform.position).normalized;
 
-        // Only sense if no wall blocks line of sight
         if (!Physics.Raycast(transform.position, dir, dist, wallLayers))
         {
             if (_state != AIState.Investigate || Vector3.Distance(_soundOrigin, player.position) > 1f)
@@ -296,11 +274,6 @@ public class EnemyAI : MonoBehaviour, IHearSound
 
     // ─── Vocalizations ───────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Plays a random vocalization clip from the current state's array
-    /// on a randomised interval. These are diegetic — the player can
-    /// use them to locate the Proctor by ear.
-    /// </summary>
     void TickVocalizations()
     {
         _vocalizationTimer -= Time.deltaTime;
@@ -326,28 +299,34 @@ public class EnemyAI : MonoBehaviour, IHearSound
 
     // ─── Catch ────────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Called when the player enters catchRadius.
-    /// Flags the catch, stops the agent, and loads the game over scene.
-    /// </summary>
     void TriggerCaught()
     {
         if (_playerCaught) return; // prevent double-triggering
 
         Debug.Log("[EnemyAI] Player caught!");
         _playerCaught    = true;
-        _agent.isStopped = true;
         _agent.ResetPath();
-        SceneManager.LoadSceneAsync("GameOver");
+        _agent.isStopped = true;
+        _agent.enabled   = false;
+
+        // Use Frances's GameOver manager if available
+        if (GameOver.Instance == null)
+            GameOver.Instance = FindFirstObjectByType<GameOver>();
+
+        if (GameOver.Instance != null)
+        {
+            int currentLevel = SceneManager.GetActiveScene().buildIndex;
+            GameOver.Instance.EndGame(currentLevel);
+        }
+        else
+        {
+            Debug.LogWarning("[EnemyAI] No GameOver found in scene — loading scene 3 directly.");
+            SceneManager.LoadScene(3);
+        }
     }
 
     // ─── IHearSound implementation ────────────────────────────────────────────
 
-    /// <summary>
-    /// Called by SoundEventManager whenever any sound is emitted in the scene.
-    /// perceivedIntensity = rawIntensity / distance
-    /// If perceivedIntensity >= hearingThreshold, switch to Investigate.
-    /// </summary>
     public void OnSoundHeard(Vector3 soundPosition, float rawIntensity)
     {
         float distance = Vector3.Distance(transform.position, soundPosition);
