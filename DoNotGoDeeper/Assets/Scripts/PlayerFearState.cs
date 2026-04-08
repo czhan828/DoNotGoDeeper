@@ -280,12 +280,12 @@ public class PlayerFearState : MonoBehaviour
         float time   = Time.time * tremorSpeed;
 
         // Perlin noise offset — centred at 0 by subtracting 0.5
-        float offsetX = (Mathf.PerlinNoise(time,              _tremorSeedX) - 0.5f) * 2f * angle;
-        float offsetY = (Mathf.PerlinNoise(_tremorSeedY, time             ) - 0.5f) * 2f * angle;
+        float offsetX = (Mathf.PerlinNoise(time,         _tremorSeedX) - 0.5f) * 2f * angle;
+        float offsetY = (Mathf.PerlinNoise(_tremorSeedY, time        ) - 0.5f) * 2f * angle;
 
         cameraPivot.localRotation = Quaternion.Euler(
             cameraPivot.localEulerAngles.x + offsetX,
-            offsetY,
+            cameraPivot.localEulerAngles.y + offsetY,
             0f
         );
     }

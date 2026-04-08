@@ -338,7 +338,7 @@ public class EnemyAI : MonoBehaviour, IHearSound
         _playerCaught    = true;
         _agent.isStopped = true;
         _agent.ResetPath();
-        SceneManager.LoadSceneAsync(3);
+        SceneManager.LoadSceneAsync("GameOver");
     }
 
     // ─── IHearSound implementation ────────────────────────────────────────────
