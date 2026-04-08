@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.SceneManagement;
 
+
 /// <summary>
 /// EnemyAI — Handles two states: Patrol and Investigate.
 ///
@@ -95,12 +96,14 @@ public class EnemyAI : MonoBehaviour, IHearSound
     private bool    _arrivedAtSound;
     private bool    _playerCaught;
 
+
     // ─── Unity lifecycle ──────────────────────────────────────────────────────
 
     void Start()
     {
         _agent = GetComponent<NavMeshAgent>();
         SoundEventManager.Register(this);
+        _state = AIState.Patrol;  // make sure it starts in patrol state
     }
 
     void OnDestroy()
@@ -270,7 +273,29 @@ public class EnemyAI : MonoBehaviour, IHearSound
         Debug.Log("[EnemyAI] Player caught!");
         _playerCaught = true;
         _agent.ResetPath();
-        SceneManager.LoadSceneAsync(3);
+        _agent.isStopped = true;
+        _agent.enabled = false; 
+    
+    // Try to find the manager if the Instance is null
+    if (GameOver.Instance == null)
+    {
+        GameOver.Instance = FindFirstObjectByType<GameOver>();
+    }
+
+    if (GameOver.Instance != null)
+    {
+        // Get the current scene so we know where to respawn
+        int currentLevel = SceneManager.GetActiveScene().buildIndex;
+        GameOver.Instance.EndGame(currentLevel);
+    }
+    else
+    {
+        Debug.LogWarning("[EnemyAI] No GameOver found in scene! Loading Scene 3 anyway.");
+    }
+
+        //Debug.Log("[EnemyAI] Loading Game Over scene...");
+    SceneManager.LoadScene(3);
+        //Debug.Log("Finished loading Game Over scene.");
 
         // ReturnToPatrol(); only reactivate if we have health bar
     }
