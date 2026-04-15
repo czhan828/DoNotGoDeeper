@@ -309,20 +309,19 @@ public class EnemyAI : MonoBehaviour, IHearSound
         _agent.isStopped = true;
         _agent.enabled   = false;
 
-        // Use Frances's GameOver manager if available
-        if (GameOver.Instance == null)
-            GameOver.Instance = FindFirstObjectByType<GameOver>();
-
         if (GameOver.Instance != null)
         {
+            // Get the current scene so we know where to respawn
             int currentLevel = SceneManager.GetActiveScene().buildIndex;
             GameOver.Instance.EndGame(currentLevel);
         }
         else
         {
-            Debug.LogWarning("[EnemyAI] No GameOver found in scene — loading scene 3 directly.");
-            SceneManager.LoadScene(3);
+            Debug.LogWarning("[EnemyAI] No GameOver found in scene! Loading Scene 3 anyway.");
         }
+
+            //Debug.Log("[EnemyAI] Loading Game Over scene...");
+        SceneManager.LoadScene(3);
     }
 
     // ─── IHearSound implementation ────────────────────────────────────────────
