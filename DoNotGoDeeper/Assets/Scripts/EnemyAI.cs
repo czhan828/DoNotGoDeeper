@@ -185,6 +185,7 @@ public class EnemyAI : MonoBehaviour, IHearSound
         float distToPlayer = Vector3.Distance(transform.position, player.position);
         if (distToPlayer <= catchRadius)
             TriggerCaught();
+            return;
     }
 
     void FindPatrolPoint()
@@ -309,20 +310,30 @@ public class EnemyAI : MonoBehaviour, IHearSound
         _agent.isStopped = true;
         _agent.enabled   = false;
 
-        if (GameOver.Instance != null)
-        {
-            // Get the current scene so we know where to respawn
-            int currentLevel = SceneManager.GetActiveScene().buildIndex;
-            GameOver.Instance.EndGame(currentLevel);
-        }
-        else
-        {
-            Debug.LogWarning("[EnemyAI] No GameOver found in scene! Loading Scene 3 anyway.");
+        if (GameOver.Instance == null)
+            {
+                GameOver.Instance = FindFirstObjectByType<GameOver>();
+            }
+
+            if (GameOver.Instance != null)
+            {
+                // Get the current scene so we know where to respawn
+                int currentLevel = SceneManager.GetActiveScene().buildIndex;
+                GameOver.Instance.EndGame(currentLevel);
+            }
+            else
+            {
+                Debug.LogWarning("[EnemyAI] No GameOver found in scene! Loading Scene 3 anyway.");
+            }
+
+                //Debug.Log("[EnemyAI] Loading Game Over scene...");
+            SceneManager.LoadScene(3);
+                //Debug.Log("Finished loading Game Over scene.");
+
+                // ReturnToPatrol(); only reactivate if we have health bar
         }
 
-            //Debug.Log("[EnemyAI] Loading Game Over scene...");
-        SceneManager.LoadScene(3);
-    }
+
 
     // ─── IHearSound implementation ────────────────────────────────────────────
 
