@@ -18644,7 +18644,7 @@ MonoBehaviour:
   jumpPower: 7
   gravity: 10
   lookSpeed: 3
-  lookXLimit: 45
+  lookXLimit: 20
   defaultHeight: 2
   crouchHeight: 1
   crouchSpeed: 3
@@ -18804,9 +18804,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 1677539941}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8a1fa1e595f13456fa81367c8c9743b5, type: 3}
+  m_Script: {fileID: 11500000, guid: 745fe73cf4867e343aa450cdae01e0f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WhisperAmbience
+  whisperClips: []
+  minInterval: 20
+  maxInterval: 60
+  spawnRadius: 4
+  onlyWhenStill: 0
+  stationaryThreshold: 3
 --- !u!114 &1677539947
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18816,9 +18822,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 1677539941}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f0d18d840834943708c2507438db0074, type: 3}
+  m_Script: {fileID: 11500000, guid: ef2553abae21791478dc15758c930cde, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProctorProximityAudio
+  droneClip: {fileID: 0}
+  proctorTransform: {fileID: 0}
+  maxHearDistance: 30
+  minHearDistance: 4
+  minVolume: 0
+  maxVolume: 0.75
+  minPitch: 0.85
+  maxPitch: 1.15
+  smoothSpeed: 2
 --- !u!114 &1677539948
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18828,9 +18843,35 @@ MonoBehaviour:
   m_GameObject: {fileID: 1677539941}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4a487aabf68894fd0bce7f55d2dcfeaf, type: 3}
+  m_Script: {fileID: 11500000, guid: 01b3733603e203a4c967e59df706ad54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerFearState
+  proctorTransform: {fileID: 0}
+  cameraPivot: {fileID: 0}
+  fearStartDistance: 20
+  fearMaxDistance: 4
+  cautionMeterFill: {fileID: 0}
+  cautionColorSafe: {r: 0, g: 1, b: 0, a: 1}
+  cautionColorDanger: {r: 1, g: 0, b: 0, a: 1}
+  noiseDecayRate: 0.8
+  noiseHoldDuration: 0.6
+  cautionShakeIntensity: 5
+  breathingAudioSource: {fileID: 0}
+  breathingClip: {fileID: 0}
+  breathVolumeCalm: 0.1
+  breathVolumeMax: 0.8
+  breathPitchCalm: 0.9
+  breathPitchMax: 1.4
+  heartbeatAudioSource: {fileID: 0}
+  heartbeatClip: {fileID: 0}
+  heartbeatStartFear: 0.4
+  heartbeatIntervalMin: 0.4
+  heartbeatIntervalMax: 1.5
+  tremorMaxAngle: 0.4
+  tremorSpeed: 3
+  postProcessVolume: {fileID: 0}
+  vignetteMin: 0.2
+  vignetteMax: 0.65
 --- !u!82 &1677539949
 AudioSource:
   m_ObjectHideFlags: 0
@@ -19613,9 +19654,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 1722724455}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1d3cb440440f240c7a817db100db43bd, type: 3}
+  m_Script: {fileID: 11500000, guid: aca06cd9731534c4eb681be73fe3ce20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FlickerLight
+  ambientFlicker: 1
+  minAmbientInterval: 8
+  maxAmbientInterval: 30
+  ambientFlickerCount: 2
+  ambientOffDuration: 0.05
+  proximityFlicker: 1
+  proximityFlickerStartFear: 0.5
+  proximityIntervalMin: 0.5
+  proximityIntervalMax: 5
+  soundReactive: 1
+  soundReactRadius: 12
+  soundReactThreshold: 0.65
+  soundReactFlickerCount: 3
 --- !u!108 &1722724459
 Light:
   m_ObjectHideFlags: 0
@@ -20659,9 +20713,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 1832763230}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1d3cb440440f240c7a817db100db43bd, type: 3}
+  m_Script: {fileID: 11500000, guid: aca06cd9731534c4eb681be73fe3ce20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FlickerLight
+  ambientFlicker: 1
+  minAmbientInterval: 8
+  maxAmbientInterval: 30
+  ambientFlickerCount: 2
+  ambientOffDuration: 0.05
+  proximityFlicker: 1
+  proximityFlickerStartFear: 0.5
+  proximityIntervalMin: 0.5
+  proximityIntervalMax: 5
+  soundReactive: 1
+  soundReactRadius: 12
+  soundReactThreshold: 0.65
+  soundReactFlickerCount: 3
 --- !u!108 &1832763234
 Light:
   m_ObjectHideFlags: 0
