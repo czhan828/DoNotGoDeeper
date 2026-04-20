@@ -6,7 +6,7 @@ using UnityEngine;
 public class Door : MonoBehaviour
 {
     public GameObject door;
-    public Vector3 openRotation = new Vector3(0, 120, 0);
+    public Vector3 openRotation = new Vector3(0, 0, 90);
     void Start()
     {
         
