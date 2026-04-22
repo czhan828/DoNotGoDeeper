@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class DoorInteraction : MonoBehaviour
+public class DoorInteration : MonoBehaviour
 {
     [SerializeField] Transform door; // 👈 assign your Door child here
     [SerializeField] float openAngle = 90f;
