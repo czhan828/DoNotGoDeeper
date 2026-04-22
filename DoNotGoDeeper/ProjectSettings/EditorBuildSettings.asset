@@ -20,6 +20,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/TutorialScene.unity
     guid: 56384b18c66469a42a84aa7210d40c27
+  - enabled: 1
+    path: Assets/Scenes/Level3.unity
+    guid: 8ae48938e687af94cb91d75b8556b3f2
+  - enabled: 1
+    path: Assets/Scenes/Winning Screen.unity
+    guid: cc6923cb315f30449981581d213688ef
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
