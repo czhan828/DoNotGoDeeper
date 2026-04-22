@@ -19489,6 +19489,8 @@ MonoBehaviour:
   door: {fileID: 1875328697}
   openAngle: 90
   openSpeed: 2
+  transitionDelay: 1
+  winSceneName: Winning Screen
 --- !u!65 &646514424
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -60548,6 +60550,8 @@ MonoBehaviour:
   door: {fileID: 353278456}
   openAngle: 90
   openSpeed: 2
+  transitionDelay: 1
+  winSceneName: Winning Scene
 --- !u!65 &2090389253
 BoxCollider:
   m_ObjectHideFlags: 0
