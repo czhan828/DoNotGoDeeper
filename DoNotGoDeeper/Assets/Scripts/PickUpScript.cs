@@ -80,12 +80,24 @@ public class PickUpScript : MonoBehaviour
     {
         if (pickUpObj.GetComponent<Rigidbody>())
         {
+            
+            if (pickUpObj.GetComponent<KeyObject>() != null)
+                {
+                    GameManager.instance.CollectKey();
+                    Destroy(pickUpObj);
+                    Debug.Log("Key collected! Total keys: " + GameManager.instance.keysCollected);
+                return;
+            }
+
             heldObj = pickUpObj;
             heldObjRb = pickUpObj.GetComponent<Rigidbody>();
             heldObjRb.isKinematic = true;
             heldObjRb.transform.parent = holdPos.transform;
             heldObj.layer = LayerNumber;
             Physics.IgnoreCollision(heldObj.GetComponent<Collider>(), player.GetComponent<Collider>(), true);
+            
+            // update counter
+    
         }
         else
         {
@@ -101,6 +113,7 @@ public class PickUpScript : MonoBehaviour
         heldObj.transform.parent = null;
         heldObj = null;
         canDrop = true;
+
     }
 
     void MoveObject()

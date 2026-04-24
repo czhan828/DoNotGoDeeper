@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// GameManager — Singleton for key collection, level progression, and catch sequence.
@@ -22,7 +23,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Key Collection")]
     public int keysCollected = 0;
-    public int keysRequired  = 1;
+    public int keysRequired;
 
     [Header("Catch / Game Over")]
     [Tooltip("The PlayerMovement component on the player — disabled when caught.")]
@@ -48,6 +49,7 @@ public class GameManager : MonoBehaviour
 
     private bool _caught = false;
 
+
     // ─── Unity lifecycle ──────────────────────────────────────────────────────
 
     void Awake()
@@ -59,13 +61,37 @@ public class GameManager : MonoBehaviour
 
     public void CollectKey()
     {
+        keysRequired = GetKeysRequired();
         keysCollected++;
         Debug.Log("Keys: " + keysCollected + "/" + keysRequired);
     }
 
+
     public bool HasEnoughKeys()
     {
-        return keysCollected >= keysRequired;
+        return keysCollected >= GetKeysRequired();
+    }
+
+    public int GetKeysRequired()
+    {
+        string scenename = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (scenename == "Level1")
+        {
+            return 4;
+        }
+        else if (scenename == "Level2")
+        {
+            return 6;
+        }
+        else if (scenename == "Level3")
+        {
+            return 8;
+        }
+        else
+        {
+            Debug.LogWarning("Unknown scene name: " + scenename + ". Defaulting keysRequired to 1.");
+            return 1;
+        }
     }
 
     // ─── Catch sequence ───────────────────────────────────────────────────────
