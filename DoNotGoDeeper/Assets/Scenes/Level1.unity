@@ -19742,14 +19742,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAI
   patrolRange: 100
-  navSampleRadius: 10
+  navSampleRadius: 80
   patrolArrivalThreshold: 8
   investigateDuration: 5
-  hearingThreshold: 0.1
+  hearingThreshold: 0.002
   patrolSpeed: 10
-  investigateSpeed: 5
+  investigateSpeed: 15
   player: {fileID: 1677539944}
-  catchRadius: 3
+  catchRadius: 15
   sensingRadius: 3.5
   wallLayers:
     serializedVersion: 2
