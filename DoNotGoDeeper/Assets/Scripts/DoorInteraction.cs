@@ -26,7 +26,6 @@ public class DoorInteraction : MonoBehaviour
 
     void Update()
     {
-        // allow E to toggle door freely, but block it after winning
         if (_playerInRange && Input.GetKeyDown(KeyCode.E) && !_hasWon)
         {
             if (_currentCoroutine != null) StopCoroutine(_currentCoroutine);
@@ -47,7 +46,6 @@ public class DoorInteraction : MonoBehaviour
 
         door.rotation = targetRotation;
 
-        // only trigger win on open, not on close
         if (isOpen && !_hasWon)
         {
             _hasWon = true;
