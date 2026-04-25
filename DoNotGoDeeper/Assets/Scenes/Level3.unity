@@ -19207,7 +19207,7 @@ MonoBehaviour:
   hearingThreshold: 0.002
   patrolSpeed: 10
   investigateSpeed: 15
-  player: {fileID: 0}
+  player: {fileID: 191298656}
   catchRadius: 5
   sensingRadius: 3.5
   wallLayers:
