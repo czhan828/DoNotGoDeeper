@@ -6,6 +6,8 @@ TagManager:
   tags:
   - canPickUp
   - CinemachineTarget
+  - Key
+  - Door
   layers:
   - Default
   - TransparentFX
