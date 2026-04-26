@@ -54,14 +54,22 @@ public class NoiseObject : MonoBehaviour
         if (oneTimeOnly && _spent) return;
         if (_cooldownTimer > 0f) return;
 
-        // Trigger on direct player contact OR when the object slams into something
-        // after being knocked (CharacterController doesn't send OnCollisionEnter to
-        // other objects, so we catch the impact when the furniture hits the floor/wall)
-        bool isPlayer = collision.gameObject.CompareTag("Player");
+        // Catches Proctor or Rigidbody objects slamming into this
         float impactSpeed = collision.relativeVelocity.magnitude;
-
-        if (isPlayer || impactSpeed > 0.8f)
+        if (impactSpeed > 0.2f)
             MakeNoise();
+    }
+
+    /// <summary>
+    /// Called by PlayerFurnitureImpact when the CharacterController walks into this object.
+    /// CharacterController doesn't fire OnCollisionEnter on other objects, so the player
+    /// script detects the hit and calls this directly.
+    /// </summary>
+    public void TriggerNoise()
+    {
+        if (oneTimeOnly && _spent) return;
+        if (_cooldownTimer > 0f) return;
+        MakeNoise();
     }
 
     void MakeNoise()
