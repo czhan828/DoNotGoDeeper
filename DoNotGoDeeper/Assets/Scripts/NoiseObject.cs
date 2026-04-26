@@ -51,11 +51,17 @@ public class NoiseObject : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        if (!collision.gameObject.CompareTag("Player")) return;
         if (oneTimeOnly && _spent) return;
         if (_cooldownTimer > 0f) return;
 
-        MakeNoise();
+        // Trigger on direct player contact OR when the object slams into something
+        // after being knocked (CharacterController doesn't send OnCollisionEnter to
+        // other objects, so we catch the impact when the furniture hits the floor/wall)
+        bool isPlayer = collision.gameObject.CompareTag("Player");
+        float impactSpeed = collision.relativeVelocity.magnitude;
+
+        if (isPlayer || impactSpeed > 0.8f)
+            MakeNoise();
     }
 
     void MakeNoise()

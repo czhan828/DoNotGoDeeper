@@ -53,10 +53,10 @@ public class PlayerFearState : MonoBehaviour
 
     [Header("Fear — Proctor Proximity")]
     [Tooltip("Distance at which fear begins (fully calm beyond this).")]
-    [SerializeField] float fearStartDistance = 20f;
+    [SerializeField] float fearStartDistance = 12f;
 
     [Tooltip("Distance at which fear is maxed (fully terrified at this range).")]
-    [SerializeField] float fearMaxDistance = 4f;
+    [SerializeField] float fearMaxDistance = 3f;
 
     // ─── Inspector: Noise / Caution Meter ────────────────────────────────────
 
@@ -64,11 +64,8 @@ public class PlayerFearState : MonoBehaviour
     [Tooltip("Image component of the caution bar fill. Set Image Type to Filled in Inspector.")]
     [SerializeField] Image cautionMeterFill;
 
-    [Tooltip("Colour of the bar when noise is low (safe).")]
-    [SerializeField] Color cautionColorSafe = Color.green;
-
-    [Tooltip("Colour of the bar when noise is high (danger).")]
-    [SerializeField] Color cautionColorDanger = Color.red;
+    [Tooltip("Colour of the caution bar fill (always this colour, fill amount changes).")]
+    [SerializeField] Color cautionColor = Color.red;
 
     [Tooltip("How quickly the noise level decays back to zero after the player stops moving.")]
     [SerializeField] float noiseDecayRate = 0.8f;
@@ -304,13 +301,16 @@ public class PlayerFearState : MonoBehaviour
     {
         if (cautionMeterFill == null) return;
 
-        cautionMeterFill.fillAmount = NoiseLevel;
-        cautionMeterFill.color      = Color.Lerp(cautionColorSafe, cautionColorDanger, NoiseLevel);
+        // Caution = highest of: noise the player is making OR how close the Proctor is
+        float cautionLevel = Mathf.Max(NoiseLevel, FearLevel);
 
-        // Shake the bar when noise is dangerously high
-        if (NoiseLevel > 0.55f && cautionShakeIntensity > 0f)
+        cautionMeterFill.fillAmount = cautionLevel;
+        cautionMeterFill.color      = cautionColor;
+
+        // Shake the bar when danger is high
+        if (cautionLevel > 0.55f && cautionShakeIntensity > 0f)
         {
-            Vector2 shake = Random.insideUnitCircle * cautionShakeIntensity * (NoiseLevel - 0.55f);
+            Vector2 shake = Random.insideUnitCircle * cautionShakeIntensity * (cautionLevel - 0.55f);
             cautionMeterFill.rectTransform.anchoredPosition = _cautionMeterBasePos + (Vector3)shake;
         }
         else
