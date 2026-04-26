@@ -9,12 +9,14 @@ public class PlayerMovement : MonoBehaviour
     public Transform cameraPivot;
 
     [Header("Movement")]
-    public float normalWalkSpeed = 60f;
-    public float normalRunSpeed = 75f;
-    public float walkSpeed;
-    public float runSpeed;
+    public float normalWalkSpeed = 6f;
+    public float normalRunSpeed = 9f;
+    public float crouchSpeed = 3f;
     public float jumpPower = 7f;
-    public float gravity = 10f;
+    public float gravity = 20f;
+
+    private float walkSpeed;
+    private float runSpeed;
 
     [Header("Mouse Look")]
     public float lookSpeed = 2f;
@@ -23,7 +25,6 @@ public class PlayerMovement : MonoBehaviour
     [Header("Crouch")]
     public float defaultHeight = 2f;
     public float crouchHeight = 1f;
-    public float crouchSpeed = 3f;
 
     [Header("Footstep Sounds")]
     public AudioSource footstepAudioSource;
@@ -51,7 +52,6 @@ public class PlayerMovement : MonoBehaviour
     {
         characterController = GetComponent<CharacterController>();
 
-        // initialize speeds
         walkSpeed = normalWalkSpeed;
         runSpeed = normalRunSpeed;
 
@@ -61,6 +61,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        // ---------------- MOVEMENT INPUT ----------------
         Vector3 forward = transform.TransformDirection(Vector3.forward);
         Vector3 right = transform.TransformDirection(Vector3.right);
 
@@ -68,62 +69,74 @@ public class PlayerMovement : MonoBehaviour
 
         float currentSpeed = isRunning ? runSpeed : walkSpeed;
 
-        float curSpeedX = canMove ? currentSpeed * Input.GetAxis("Vertical") : 0;
-        float curSpeedY = canMove ? currentSpeed * Input.GetAxis("Horizontal") : 0;
+        float inputX = Input.GetAxis("Vertical");
+        float inputY = Input.GetAxis("Horizontal");
 
-        float movementDirectionY = moveDirection.y;
-        moveDirection = (forward * curSpeedX) + (right * curSpeedY);
+        Vector3 move = (forward * inputX + right * inputY) * currentSpeed;
 
-        if (Input.GetButton("Jump") && canMove && characterController.isGrounded)
+        // ---------------- GROUND CHECK ----------------
+        if (characterController.isGrounded)
         {
-            moveDirection.y = jumpPower;
-        }
-        else
-        {
-            moveDirection.y = movementDirectionY;
-        }
+            if (moveDirection.y < 0)
+                moveDirection.y = -2f; // keeps player grounded
 
-        if (!characterController.isGrounded)
-        {
-            moveDirection.y -= gravity * Time.deltaTime;
+            if (Input.GetButtonDown("Jump") && canMove)
+            {
+                moveDirection.y = jumpPower;
+            }
         }
 
-        // Crouch with R key
+        // ---------------- GRAVITY ----------------
+        moveDirection.y -= gravity * Time.deltaTime;
+
+        // combine movement
+        Vector3 finalMove = move + new Vector3(0, moveDirection.y, 0);
+
+        // ---------------- CROUCH ----------------
         if (Input.GetKey(KeyCode.R) && canMove)
         {
             characterController.height = crouchHeight;
+            characterController.center = new Vector3(0, crouchHeight / 2f, 0);
+
             walkSpeed = crouchSpeed;
             runSpeed = crouchSpeed;
+
             isCrouching = true;
         }
         else
         {
             characterController.height = defaultHeight;
+            characterController.center = new Vector3(0, defaultHeight / 2f, 0);
+
             walkSpeed = normalWalkSpeed;
             runSpeed = normalRunSpeed;
+
             isCrouching = false;
         }
 
-        characterController.Move(moveDirection * Time.deltaTime);
+        // ---------------- MOVE PLAYER ----------------
+        characterController.Move(finalMove * Time.deltaTime);
 
-        HandleFootsteps(curSpeedX, curSpeedY);
-
+        // ---------------- CAMERA LOOK ----------------
         if (canMove)
         {
             rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
             rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
 
             cameraPivot.localRotation = Quaternion.Euler(rotationX, 0, 0);
-            transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
+
+            float mouseX = Input.GetAxis("Mouse X") * lookSpeed;
+            transform.Rotate(0, mouseX, 0);
         }
+
+        HandleFootsteps(inputX, inputY);
     }
 
     void HandleFootsteps(float speedX, float speedY)
     {
         bool isMoving = Mathf.Abs(speedX) > 0.1f || Mathf.Abs(speedY) > 0.1f;
-        bool isGrounded = characterController.isGrounded;
 
-        if (isMoving && isGrounded)
+        if (isMoving && characterController.isGrounded)
         {
             footstepTimer -= Time.deltaTime;
 

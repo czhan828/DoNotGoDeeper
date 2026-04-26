@@ -28525,15 +28525,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: a19ad76fabe67bb4398081f250cf17ab, type: 3}
       propertyPath: m_LocalScale.x
-      value: 14
+      value: 11.886
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a19ad76fabe67bb4398081f250cf17ab, type: 3}
       propertyPath: m_LocalScale.y
-      value: 14
+      value: 11.886
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a19ad76fabe67bb4398081f250cf17ab, type: 3}
       propertyPath: m_LocalScale.z
-      value: 14
+      value: 11.886
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a19ad76fabe67bb4398081f250cf17ab, type: 3}
       propertyPath: m_LocalPosition.x
@@ -28541,11 +28541,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a19ad76fabe67bb4398081f250cf17ab, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 6.54
+      value: 5.486
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a19ad76fabe67bb4398081f250cf17ab, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.42
+      value: 0.996
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a19ad76fabe67bb4398081f250cf17ab, type: 3}
       propertyPath: m_LocalRotation.w
@@ -31237,15 +31237,13 @@ MonoBehaviour:
   cameraPivot: {fileID: 848125830}
   normalWalkSpeed: 60
   normalRunSpeed: 75
-  walkSpeed: 60
-  runSpeed: 75
+  crouchSpeed: 3
   jumpPower: 7
   gravity: 10
   lookSpeed: 3
   lookXLimit: 20
   defaultHeight: 2
   crouchHeight: 1
-  crouchSpeed: 3
   footstepAudioSource: {fileID: 708929618}
   footstepSound: {fileID: 8300000, guid: e7086d0f08d99b64e8e5c7b2f36ec465, type: 3}
   walkStepInterval: 0.5
@@ -49210,8 +49208,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 10.000002, y: 20.000002, z: 1.3456694}
-  m_Center: {x: 7.339712e-16, y: 0, z: -0.039963204}
+  m_Size: {x: 10.000002, y: 20.000002, z: 0.47619945}
+  m_Center: {x: -3.1388547e-19, y: 0, z: 0.0000593167}
 --- !u!64 &1191143052
 MeshCollider:
   m_ObjectHideFlags: 0
