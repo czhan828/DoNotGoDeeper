@@ -2827,7 +2827,12 @@ MonoBehaviour:
 
     > WASD to move
 
-    > Shhhh.....'
+    > Shhhh.....
+
+
+    To
+    exit this screen, either touch the proctor in the other room or collect all keys
+    and interact with the gray exit door.'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -4506,6 +4511,7 @@ GameObject:
   - component: {fileID: 2104157203}
   - component: {fileID: 2104157202}
   - component: {fileID: 2104157201}
+  - component: {fileID: 2104157207}
   m_Layer: 0
   m_Name: Level 1 Proctor
   m_TagString: Untagged
@@ -4662,7 +4668,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2104157200}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f3b8b3a61f1e1824fbcc4bd954f06741, type: 3}
   m_Name: 
@@ -4727,6 +4733,18 @@ Transform:
   - {fileID: 586518857}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2104157207
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2104157200}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe8b1ec54b62a2e4183e8249bc399066, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LevelExit
 --- !u!1 &2110912183
 GameObject:
   m_ObjectHideFlags: 0
