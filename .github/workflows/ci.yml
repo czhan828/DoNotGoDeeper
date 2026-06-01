@@ -22,8 +22,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           unityVersion: 6000.3.10f1
-          projectPath: .
-
+          projectPath: DoNotGoDeeper
 
   build:
     name: Build
@@ -42,3 +41,4 @@ jobs:
         with:
           unityVersion: 6000.3.10f1
           targetPlatform: StandaloneLinux64
+          projectPath: DoNotGoDeeper
