@@ -22,6 +22,8 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           unityVersion: 6000.3.10f1
+          projectPath: .
+
 
   build:
     name: Build
